@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
 
         try {
             val response = service.getChatResponse(
-                authToken = "Bearer sk-78f4384683604045b1b5925c52a99988", // Replace with your key
+                authToken = "Bearer api_here", // Replace with your key
                 request = DeepSeekRequest(messages = messages)
             )
 
