@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="CustomCardShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomLeft">150dp</item>
+        <item name="cornerSizeBottomRight">150dp</item>
+    </style>
+    <style name="CustomLeftEye" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">65dp</item>
+        <item name="cornerSizeTopRight">65dp</item>
+        <item name="height">25dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+    <style name="CustomRightEye" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">65dp</item>
+        <item name="cornerSizeTopRight">65dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+</resources>
