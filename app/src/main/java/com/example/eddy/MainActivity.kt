@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -11,7 +12,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.eddy.servicesAndModels.DeepSeekApiService
+import com.example.eddy.servicesAndModels.DeepSeekRequest
+import com.example.eddy.servicesAndModels.Message
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
+import kotlin.math.log
 
 class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
 
@@ -65,25 +76,51 @@ class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
         when (requestCode) {
             REQUEST_CODE_SPEECH_INPUT -> {
                 if (resultCode == RESULT_OK && data != null) {
-                    val result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                    val spokenText = result?.get(0).toString()
-                    tvUserInput.text = "You said: $spokenText"
+                    val spokenText = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
+                    spokenText?.let { userInput ->
+                        tvUserInput.text = "You said: $userInput"
 
-                    // Process the spoken text with your AI
-                    processUserInput(spokenText)
+                        // Fallback using Main dispatcher
+                        CoroutineScope(Dispatchers.Main).launch {
+                            try {
+                                processUserInput(userInput)
+                            } catch (e: Exception) {
+                                tvBotResponse.text = "Error: ${e.message}"
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-    private fun processUserInput(input: String) {
-        // Here you would typically call your AI service API
-        // For now, we'll just echo back with a simple response
+    private suspend fun processUserInput(input: String) {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api.deepseek.com/") // Confirm the actual API URL
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
 
-        val botResponse = "I heard you say: $input"
-        tvBotResponse.text = "Bot says: $botResponse"
+        val service = retrofit.create(DeepSeekApiService::class.java)
+        val messages = listOf(Message("user", input))
 
-        // Speak the response
-        speakOut(botResponse)
+        try {
+            val response = service.getChatResponse(
+                authToken = "Bearer Your_API_key_here", // Replace with your key
+                request = DeepSeekRequest(messages = messages)
+            )
+
+            if (response.choices.isNotEmpty()) {
+                val botResponse = response.choices[0].message.content
+                runOnUiThread {
+                    tvBotResponse.text = "Bot says: $botResponse"
+                    speakOut(botResponse)
+                }
+            }
+        } catch (e: Exception) {
+            runOnUiThread {
+                Log.d("dagger", "processUserInput: ${e.message}")
+                tvBotResponse.text = "Error: ${e.localizedMessage}"
+            }
+        }
     }
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
