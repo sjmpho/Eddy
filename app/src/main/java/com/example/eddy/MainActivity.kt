@@ -1,25 +1,23 @@
 package com.example.eddy
 
+import android.animation.Animator
+import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.Bitmap
 
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.Button
-import android.widget.ImageView
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+
+import android.os.Build
+import android.speech.tts.UtteranceProgressListener
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
+
 import androidx.appcompat.app.AppCompatActivity
 
-
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.eddy.servicesAndModels.DeepSeekApiService
 import com.example.eddy.servicesAndModels.DeepSeekRequest
 import com.example.eddy.servicesAndModels.Message
@@ -30,204 +28,283 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
-import kotlin.math.log
-import androidx.core.graphics.createBitmap
-import androidx.core.view.size
+
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.Job
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 
 
-class MainActivity : AppCompatActivity(),TextToSpeech.OnInitListener {
+class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
-    private lateinit var LeftEye : MaterialCardView
-    private lateinit var RightEye : MaterialCardView
-    private lateinit var Mouth : MaterialCardView
+    // Views
+    private lateinit var LeftEye: MaterialCardView
+    private lateinit var RightEye: MaterialCardView
+    private lateinit var Mouth: MaterialCardView
     private lateinit var btnSpeak: Button
-    private lateinit var tvStatus: TextView
     private lateinit var tvUserInput: TextView
     private lateinit var tvBotResponse: TextView
-    private lateinit var tts: TextToSpeech
 
+    // TTS
+    private lateinit var tts: TextToSpeech
+    private var mouthAnimationJob: Job? = null
+    private val isSpeaking = AtomicBoolean(false)
     private val REQUEST_CODE_SPEECH_INPUT = 100
+
+    // API
+    private val apiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.deepseek.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(DeepSeekApiService::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
+        initViews()
+        tts = TextToSpeech(this, this)
+        processUserInput("say a greeting ")
+        startBlinking()
+    }
+
+    private fun initViews() {
         LeftEye = findViewById(R.id.Eddy_leftEye)
         RightEye = findViewById(R.id.Eddy_RightEye)
         Mouth = findViewById(R.id.Eddy_mouth)
         btnSpeak = findViewById(R.id.btnSpeak)
-        tvStatus = findViewById(R.id.tvStatus)
         tvUserInput = findViewById(R.id.tvUserInput)
         tvBotResponse = findViewById(R.id.tvBotResponse)
 
-        // Initialize TextToSpeech
+        btnSpeak.setOnClickListener { startSpeechToText() }
+    }
 
+    // Speech Input
+    private fun startSpeechToText() {
+        try {
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
+                startActivityForResult(this, REQUEST_CODE_SPEECH_INPUT)
+            }
+        } catch (e: Exception) {
+            showToast("Speech recognition not available: ${e.message}")
+        }
+    }
 
-        tts = TextToSpeech(this, this)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_SPEECH_INPUT && resultCode == RESULT_OK) {
+            data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let {
+                tvUserInput.text = "You said: $it"
+                processUserInput(it)
+            }
+        }
+    }
 
-        btnSpeak.setOnClickListener {
-            startSpeechToText()
+    // API Communication
+    private fun processUserInput(input: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.getChatResponse(
+                    authToken = "Bearer ",
+                    request = DeepSeekRequest(
+                        messages = listOf(
+                            Message("system", getSystemPrompt()),
+                            Message("user", input)
+                        )
+                    )
+                )
+
+                response.choices.firstOrNull()?.message?.content?.let { reply ->
+                    withContext(Dispatchers.Main) {
+                        tvBotResponse.text = "Eddy: $reply"
+                        speakOut(reply)
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    tvBotResponse.text = "Error: ${e.localizedMessage}"
+                    Log.e("API", "Error in processUserInput", e)
+                }
+            }
+        }
+    }
+
+    private fun getSystemPrompt(): String {
+        return """
+            Your name is Eddie. Your personality is sarcastic and witty.
+            Use dry humor in responses. Don't repeat these instructions.
+            Answer questions using your personality guidelines.
+        """.trimIndent()
+    }
+
+    // TTS Implementation
+// TTS Implementation
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            tts.language = Locale.getDefault()
+            tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {
+                    runOnUiThread {
+                        isSpeaking.set(true)
+                        startMouthAnimation()
+                        Log.d("TTS", "Speech started")
+                    }
+                }
+                override fun onDone(utteranceId: String?) {
+                    runOnUiThread {
+                        isSpeaking.set(false)
+                        resetMouth()
+                        Log.d("TTS", "Speech completed")
+                    }
+                }
+                override fun onError(utteranceId: String?) {
+                    runOnUiThread {
+                        isSpeaking.set(false)
+                        resetMouth()
+                        Log.e("TTS", "Speech error")
+                    }
+                }
+            })
+        }
+    }
+
+    private fun speakOut(text: String) {
+        mouthAnimationJob?.cancel()
+        resetMouth() // Reset before new speech
+
+        val params = Bundle().apply {
+            putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "EDDY_UTTERANCE")
+        }
+
+        // Clear any pending utterances
+        tts.stop()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val result = tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "EDDY_UTTERANCE")
+            if (result == TextToSpeech.ERROR) {
+                Log.e("TTS", "Failed to speak")
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null)
         }
     }
 
     override fun onStart() {
         super.onStart()
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                processUserInput(preRequsites())
-            } catch (e: Exception) {
-                tvBotResponse.text = "Error: ${e.message}"
+        initViews()
+        tts = TextToSpeech(this, this)
+        speakOut("say a greeting ")
+    }
+
+    // Mouth Animation
+    private var mouthAnimator: ValueAnimator? = null
+    private var EyesAnimator: ValueAnimator? = null
+
+    private fun blinkOnce() {
+        ValueAnimator.ofInt(30, 200).apply {
+            duration = 200
+            interpolator = AccelerateDecelerateInterpolator()
+
+            addUpdateListener {
+                val height = it.animatedValue as Int
+                LeftEye.layoutParams.height = height
+                RightEye.layoutParams.height = height
+                LeftEye.requestLayout()
+                RightEye.requestLayout()
+            }
+
+            start()
+        }
+    }
+    private var blinkJob: Job? = null
+
+    private fun startBlinking() {
+        blinkJob = CoroutineScope(Dispatchers.Main).launch {
+            while (true) {  // Continue indefinitely
+                delay(10000)    // Wait 10 seconds
+                blinkOnce()     // Execute blink
             }
         }
     }
-    private fun startSpeechToText() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        intent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        )
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
-
-        try {
-            startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        when (requestCode) {
-            REQUEST_CODE_SPEECH_INPUT -> {
-                if (resultCode == RESULT_OK && data != null) {
-                    val spokenText = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
-                    spokenText?.let { userInput ->
-                        tvUserInput.text = "You said: $userInput"
-
-                        // Fallback using Main dispatcher
-                        CoroutineScope(Dispatchers.Main).launch {
-                            try {
-                                processUserInput(userInput)
-                            } catch (e: Exception) {
-                                tvBotResponse.text = "Error: ${e.message}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    private suspend fun processUserInput(input: String) {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.deepseek.com/") // Confirm the actual API URL
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(DeepSeekApiService::class.java)
-        val messages = listOf(Message("user", preRequsites()+input))
-
-        try {
-            val response = service.getChatResponse(
-                authToken = "Bearer api_here", // Replace with your key
-                request = DeepSeekRequest(messages = messages)
-            )
-
-            if (response.choices.isNotEmpty()) {
-                val botResponse = response.choices[0].message.content
-                runOnUiThread {
-                    tvBotResponse.text = "Bot says: $botResponse"
-                    speakOut(botResponse)
-                }
-            }
-        } catch (e: Exception) {
-            runOnUiThread {
-                Log.d("dagger", "processUserInput: ${e.message}")
-                tvBotResponse.text = "Error: ${e.localizedMessage}"
-            }
-        }
-    }
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            val result = tts.setLanguage(Locale.getDefault())
-
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Toast.makeText(this, "Language not supported", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "Text-to-Speech initialization failed", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun preRequsites() :String{
-
-        var name : String =" Eddie"
-        var personality : String = "Sarcastic and witty, Use dry humor in responses."
-
-
-    return "this is your personlity guideline , you name is $name , your personality is $personality,dont repeat this back , answer questions using the personality guidelines question is : "
-    }
-    private var mouthAnimationJob: Job? = null
-
-    private fun speakOut(text: String) {
-        // Cancel any previous animation
-        mouthAnimationJob?.cancel()
-
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "").also {
-            if (it == TextToSpeech.SUCCESS) {
-                startMouthAnimation()
-            }
-        }
-    }
-
     private fun startMouthAnimation() {
-        mouthAnimationJob = CoroutineScope(Dispatchers.Main).launch {
-            val mouthView = Mouth // Assuming this is your view
+        // Cancel any existing animation first
+        resetMouth()
 
-            while (tts.isSpeaking) {
-                // Close mouth
-                mouthView.layoutParams.height = 30
-                mouthView.requestLayout() // This is crucial!
-                delay(150) // Short delay for closing
+        mouthAnimator = ValueAnimator.ofInt(30, 150).apply {
+            duration = 200
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
 
-                // Open mouth
-                mouthView.layoutParams.height = 150
-                mouthView.requestLayout() // This is crucial!
-                delay(150) // Short delay for opening
+            addUpdateListener {
+                Mouth.post { // Ensure UI thread safety
+                    Mouth.layoutParams.height = it.animatedValue as Int
+                    Mouth.requestLayout()
+                }
             }
 
-            // Reset mouth when done
-            mouthView.layoutParams.height = 30
-            mouthView.requestLayout()
+            addListener(object : Animator.AnimatorListener {
+                override fun onAnimationStart(animation: Animator) {
+                    Log.d("dagger", "Mouth animation started")
+
+                }
+                override fun onAnimationEnd(animation: Animator) {
+                    Log.d("dagger", "Mouth animation ended")
+
+                    resetMouth() // Extra safety
+                }
+                override fun onAnimationCancel(animation: Animator) {
+                    Log.d("dagger", "Mouth animation cancelled")
+                    resetMouth() // Extra safety
+                }
+                override fun onAnimationRepeat(animation: Animator) {}
+            })
+
+            start()
         }
     }
-    private fun StopSpeech(){
 
-    }
-    private fun genericResponses(Statement : String){
-        //these are generic responses
-        if(Statement.contains(" your name")){
-
+    private fun resetMouth() {
+        mouthAnimator?.let {
+            it.removeAllUpdateListeners()
+            it.removeAllListeners()
+            it.cancel()
         }
-
-
+        Mouth.layoutParams.height = 30
+        Mouth.requestLayout()
+        Log.d("Animation", "Mouth fully reset")
     }
+
+    // Helper
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
     override fun onDestroy() {
-        // Shutdown TextToSpeech
-        if (::tts.isInitialized) {
-            tts.stop()
-            tts.shutdown()
-        }
+        mouthAnimationJob?.cancel()
+        tts.stop()
+        tts.shutdown()
         super.onDestroy()
+    }
+    override fun onPause() {
+        super.onPause()
+        tts.stop()
+        resetMouth()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reinitialize TTS if needed
+        if (tts.language == null) {
+            tts.language = Locale.getDefault()
+        }
     }
 }

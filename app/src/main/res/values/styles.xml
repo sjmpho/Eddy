@@ -5,21 +5,42 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSizeTopLeft">0dp</item>
         <item name="cornerSizeTopRight">0dp</item>
-        <item name="cornerSizeBottomLeft">150dp</item>
-        <item name="cornerSizeBottomRight">150dp</item>
+        <item name="cornerSizeBottomLeft">100dp</item>
+        <item name="cornerSizeBottomRight">100dp</item>
     </style>
     <style name="CustomLeftEye" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSizeTopLeft">65dp</item>
-        <item name="cornerSizeTopRight">65dp</item>
+        <item name="cornerSizeTopLeft">50dp</item>
+        <item name="cornerSizeTopRight">50dp</item>
         <item name="height">25dp</item>
         <item name="cornerSizeBottomLeft">0dp</item>
         <item name="cornerSizeBottomRight">0dp</item>
     </style>
     <style name="CustomRightEye" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSizeTopLeft">65dp</item>
-        <item name="cornerSizeTopRight">65dp</item>
+        <item name="cornerSizeTopLeft">50dp</item>
+        <item name="cornerSizeTopRight">50dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+    <style name="CustomBody" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">170dp</item>
+        <item name="cornerSizeTopRight">170dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+    <style name="CustomLeftJacket" parent="">
+       <item name="chipCornerRadius"></item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">100dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+    <style name="CustomRightJacket" parent="">
+        <tem name="cornerFamily">none</tem>
+        <item name="cornerSizeTopLeft">170dp</item>
+        <item name="cornerSizeTopRight">170dp</item>
         <item name="cornerSizeBottomLeft">0dp</item>
         <item name="cornerSizeBottomRight">0dp</item>
     </style>

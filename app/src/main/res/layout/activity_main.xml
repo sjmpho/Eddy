@@ -15,20 +15,16 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="16dp">
-
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tap the microphone to speak"/>
-
-
         <TextView
             android:id="@+id/tvUserInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"/>
-
         <TextView
             android:id="@+id/tvBotResponse"
             android:layout_width="match_parent"
@@ -37,42 +33,111 @@
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
-        android:layout_width="150dp"
-        app:shapeAppearanceOverlay="@style/CustomLeftEye"
-        android:layout_margin="30dp"
-
-        android:id="@+id/Eddy_leftEye"
-       android:layout_alignParentStart="true"
-        app:strokeWidth="15dp"
-
-        app:strokeColor="@color/black"
-        android:backgroundTint="@color/white"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_height="100dp"/>
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="150dp"
-        android:layout_margin="30dp"
-        android:id="@+id/Eddy_RightEye"
-     android:layout_centerVertical="true"
-        app:strokeWidth="15dp"
-        android:layout_alignParentEnd="true"
-        app:strokeColor="@color/black"
-        android:backgroundTint="@color/white"
-        app:shapeAppearanceOverlay="@style/CustomRightEye"
-        android:layout_centerHorizontal="true"
-        android:layout_height="100dp"/>
-    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_margin="30dp"
-        app:shapeAppearanceOverlay="@style/CustomCardShape"
-        app:strokeWidth="22dp"
-        android:id="@+id/Eddy_mouth"
-        app:strokeColor="@color/black"
+        app:strokeWidth="35dp"
         android:backgroundTint="@color/white"
+
+        android:layout_margin="20dp"
         android:layout_above="@id/btnSpeak"
-       android:layout_centerVertical="true"
-        android:layout_height="30dp"/>
+        app:shapeAppearanceOverlay="@style/CustomBody"
+
+        app:strokeColor="@color/black"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+
+            android:layout_marginTop="40dp"
+
+            android:layout_width="match_parent"
+            android:layout_marginBottom="-15dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+
+                android:background="@color/white"
+                android:backgroundTint="@color/white"
+                app:strokeColor="@color/white">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/white"
+                    android:backgroundTint="@color/white">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/Eddy_leftEye"
+                        android:layout_width="100dp"
+                        android:layout_height="75dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerHorizontal="true"
+                        android:layout_margin="15dp"
+                        android:layout_marginTop="25dp"
+                        android:backgroundTint="@color/white"
+                        app:shapeAppearanceOverlay="@style/CustomLeftEye"
+                        app:strokeColor="@color/black"
+                        app:strokeWidth="12dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/Eddy_RightEye"
+                        android:layout_width="100dp"
+                        android:layout_height="75dp"
+
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerHorizontal="true"
+                        android:layout_margin="15dp"
+                        android:backgroundTint="@color/white"
+                        app:shapeAppearanceOverlay="@style/CustomRightEye"
+                        app:strokeColor="@color/black"
+                        app:strokeWidth="12dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/Eddy_mouth"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_centerVertical="true"
+                        android:layout_margin="25dp"
+                        android:backgroundTint="@color/white"
+                        app:shapeAppearanceOverlay="@style/CustomCardShape"
+                        app:strokeColor="@color/black"
+                        app:strokeWidth="15dp" />
+
+                </RelativeLayout>
+
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                app:dividerColor="@color/black"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:backgroundTint="@color/white"
+                android:background="@color/white"
+                android:orientation="horizontal"
+                android:layout_height="match_parent">
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="135dp"
+
+                    app:shapeAppearanceOverlay="@style/CustomLeftJacket"
+                    android:layout_height="match_parent"/>
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="135dp"
+                    app:shapeAppearanceOverlay="@style/CustomRightJacket"
+                    android:layout_height="match_parent"/>
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+
+
+
+
     <Button
         android:layout_centerInParent="true"
         android:layout_alignParentBottom="true"
