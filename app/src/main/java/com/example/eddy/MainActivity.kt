@@ -209,7 +209,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var EyesAnimator: ValueAnimator? = null
 
     private fun blinkOnce() {
-        ValueAnimator.ofInt(30, 200).apply {
+        ValueAnimator.ofInt(30, 100).apply {
             duration = 200
             interpolator = AccelerateDecelerateInterpolator()
 
@@ -238,7 +238,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         // Cancel any existing animation first
         resetMouth()
 
-        mouthAnimator = ValueAnimator.ofInt(30, 150).apply {
+        mouthAnimator = ValueAnimator.ofInt(50, 75).apply {
             duration = 200
             repeatMode = ValueAnimator.REVERSE
             repeatCount = ValueAnimator.INFINITE
@@ -278,7 +278,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             it.removeAllListeners()
             it.cancel()
         }
-        Mouth.layoutParams.height = 30
+        Mouth.layoutParams.height = 50
         Mouth.requestLayout()
         Log.d("Animation", "Mouth fully reset")
     }
