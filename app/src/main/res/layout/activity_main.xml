@@ -127,7 +127,6 @@
                      android:layout_height="match_parent"/>
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="135dp"
-                    app:shapeAppearanceOverlay="@style/CustomRightJacket"
                     android:layout_height="match_parent"/>
             </LinearLayout>
         </LinearLayout>
