@@ -234,6 +234,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val spannable = SpannableString(fullText)
 
         val startPos = words.take(currentWordIndex).sumOf { it.length + 1 }
+
+        //*******************here we detect the winking**************************************************
+        if(words.get(currentWordIndex).equals("*wink"))
+        {
+            Log.d("dude", "highlightWordsSequentially: its a wink")
+        }
+      //  Log.d("dude", "highlightWordsSequentially: ${words.get(currentWordIndex)}")
         val endPos = startPos + words[currentWordIndex].length
 
         // Apply highlight to current word
