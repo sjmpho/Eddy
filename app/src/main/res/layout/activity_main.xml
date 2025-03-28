@@ -7,7 +7,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
+    <TextView
+        android:id="@+id/tvCaptions"
+        android:elevation="80dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:lineSpacingExtra="4dp"
+        android:padding="16dp"/>
     <LinearLayout
         android:visibility="gone"
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -34,10 +41,10 @@
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        app:strokeWidth="35dp"
+        app:strokeWidth="30dp"
         android:backgroundTint="@color/white"
 
-        android:layout_margin="20dp"
+        android:layout_margin="10dp"
         android:layout_above="@id/btnSpeak"
         app:shapeAppearanceOverlay="@style/CustomBody"
 
