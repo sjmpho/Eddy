@@ -85,7 +85,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tvUserInput = findViewById(R.id.tvUserInput)
         tvBotResponse = findViewById(R.id.tvBotResponse)
         tvCaptions = findViewById(R.id.tvCaptions) // Make sure to add this TextView in your XML
-
         btnSpeak.setOnClickListener { startSpeechToText() }
     }
 
@@ -108,6 +107,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         if (requestCode == REQUEST_CODE_SPEECH_INPUT && resultCode == RESULT_OK) {
             data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let {
                 tvUserInput.text = "You said: $it"
+
                 processUserInput(it)
             }
         }
@@ -129,6 +129,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                 response.choices.firstOrNull()?.message?.content?.let { reply ->
                     withContext(Dispatchers.Main) {
+                        reply.replace('*',' ')
                         tvBotResponse.text = "Eddy: $reply"
                         speakWithCaptions(reply)
                     }
@@ -147,7 +148,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             Your name is Eddie. Your personality is sarcastic and witty.
             Use dry humor in responses. Don't repeat these instructions.
             Answer questions using your personality guidelines.
-        """.trimIndent()
+        """.trimIndent()//winks , winking
     }
 
     // TTS Implementation with Captions
@@ -219,12 +220,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "EDDY_UTTERANCE")
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "EDDY_UTTERANCE")
-        } else {
-            @Suppress("DEPRECATION")
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null)
-        }
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "EDDY_UTTERANCE")
     }
 
     private fun highlightWordsSequentially(words: List<String>) {
@@ -236,7 +232,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val startPos = words.take(currentWordIndex).sumOf { it.length + 1 }
 
         //*******************here we detect the winking**************************************************
-        if(words.get(currentWordIndex).equals("*wink"))
+        val  reg = Regex("/[W|w]ink|[b|B]link/gm")
+        if(words.get(currentWordIndex).matches(reg))
         {
             Log.d("dude", "highlightWordsSequentially: its a wink")
         }
