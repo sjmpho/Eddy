@@ -1,8 +1,12 @@
 package com.example.eddy
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.ValueAnimator
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -35,7 +39,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import android.os.Handler
 import android.os.Looper
 import android.graphics.Typeface
+import android.os.IBinder
+import android.speech.RecognitionListener
+import android.speech.SpeechRecognizer
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
+import kotlin.math.log
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
@@ -47,6 +57,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var tvUserInput: TextView
     private lateinit var tvBotResponse: TextView
     private lateinit var tvCaptions: TextView
+    private  val WAKE_WORD = "activate"
 
     // TTS
     private lateinit var tts: TextToSpeech
@@ -66,6 +77,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             .build()
             .create(DeepSeekApiService::class.java)
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,7 +130,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = apiService.getChatResponse(
-                    authToken = "Bearer ",
+                    authToken = "Bearer sk-78f4384683604045b1b5925c52a99988",
                     request = DeepSeekRequest(
                         messages = listOf(
                             Message("system", getSystemPrompt()),
@@ -129,9 +141,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                 response.choices.firstOrNull()?.message?.content?.let { reply ->
                     withContext(Dispatchers.Main) {
-                        reply.replace('*',' ')
-                        tvBotResponse.text = "Eddy: $reply"
-                        speakWithCaptions(reply)
+
+                       var mod_reply = reply.replace('*',' ')
+                        tvBotResponse.text = "Eddy: $mod_reply"
+                        speakWithCaptions(mod_reply)
                     }
                 }
             } catch (e: Exception) {
@@ -232,11 +245,19 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val startPos = words.take(currentWordIndex).sumOf { it.length + 1 }
 
         //*******************here we detect the winking**************************************************
-        val  reg = Regex("/[W|w]ink|[b|B]link/gm")
+        val reg = Regex("(?i)(wink|blink)")
+
         if(words.get(currentWordIndex).matches(reg))
         {
             Log.d("dude", "highlightWordsSequentially: its a wink")
+            winkJob = CoroutineScope(Dispatchers.Main).launch {
+                winkLeftEye()
+            }
+
+        }else{
+
         }
+
       //  Log.d("dude", "highlightWordsSequentially: ${words.get(currentWordIndex)}")
         val endPos = startPos + words[currentWordIndex].length
 
@@ -375,4 +396,92 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             tts.language = Locale.getDefault()
         }
     }
+//auto listen
+    override fun onStart() {
+        super.onStart()
+    checkAudioPermission()
+    setupVoiceRecognition()
+    }
+    private lateinit var speechRecognizer: SpeechRecognizer
+    private var isListening = false
+    private fun setupVoiceRecognition() {
+        if (SpeechRecognizer.isRecognitionAvailable(this)) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this).apply {
+                setRecognitionListener(object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) {}
+                    override fun onBeginningOfSpeech() {}
+                    override fun onRmsChanged(rmsdB: Float) {}
+                    override fun onBufferReceived(buffer: ByteArray?) {}
+                    override fun onEndOfSpeech() {}
+                    override fun onError(error: Int) {
+                        if (isListening) restartListening()
+                        Log.d("dude", "onError: lis $error")
+                    }
+
+                    override fun onResults(results: Bundle) {
+                        results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let {
+                            if (it.contains("activate", ignoreCase = true)) {
+                                onWakeWordDetected()
+                            }
+                        }
+                        restartListening()
+                    }
+
+                    override fun onPartialResults(partialResults: Bundle?) {}
+                    override fun onEvent(eventType: Int, params: Bundle?) {}
+                })
+            }
+        }
+    }
+
+    private fun startListening() {
+        if (!isListening) {
+            isListening = true
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            }
+            speechRecognizer.startListening(intent)
+        }
+    }
+
+    private fun restartListening() {
+        if (isListening) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                startListening()
+            }, 1000)
+        }
+    }
+
+    private fun onWakeWordDetected() {
+        // Visual feedback
+        Log.d("dude", "onWakeWordDetected: wake word detected")
+
+    }
+    private  val AUDIO_PERMISSION_CODE = 101
+    private fun checkAudioPermission() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                AUDIO_PERMISSION_CODE
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == AUDIO_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening()
+            }
+        }
+    }
+
+
 }
