@@ -193,6 +193,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         resetMouth()
                         resetCaptionStyle()
                         Log.d("TTS", "Speech completed")
+
                     }
                 }
                 override fun onError(utteranceId: String?) {
@@ -201,6 +202,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         resetMouth()
                         resetCaptionStyle()
                         Log.e("TTS", "Speech error")
+
                     }
                 }
             })
@@ -227,6 +229,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     wordHighlighter.removeCallbacksAndMessages(null)
                     resetMouth()
                     resetCaptionStyle()
+                    startSpeechToText()
                 }
             }
 
@@ -236,6 +239,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     wordHighlighter.removeCallbacksAndMessages(null)
                     resetMouth()
                     resetCaptionStyle()
+                    startSpeechToText()
                 }
             }
         })
