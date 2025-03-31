@@ -57,7 +57,9 @@ dependencies {
 
     // For text-to-speech
     implementation("androidx.core:core-ktx:1.10.0")
-
+//glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")  // For lifecycleScope
             implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2") // If using ViewModel
             implementation("androidx.activity:activity-ktx:1.8.0") // For activity-specific extensions

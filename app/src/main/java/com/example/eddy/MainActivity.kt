@@ -42,8 +42,11 @@ import android.graphics.Typeface
 import android.os.IBinder
 import android.speech.RecognitionListener
 import android.speech.SpeechRecognizer
+import android.view.View
+import android.widget.ImageView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.google.android.material.card.MaterialCardView
 import kotlin.math.log
 
@@ -54,8 +57,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var RightEye: MaterialCardView
     private lateinit var Mouth: MaterialCardView
     private lateinit var btnSpeak: Button
-    private lateinit var tvUserInput: TextView
-    private lateinit var tvBotResponse: TextView
+    private lateinit var thinking : ImageView
     private lateinit var tvCaptions: TextView
     private  val WAKE_WORD = "activate"
 
@@ -94,16 +96,28 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         RightEye = findViewById(R.id.Eddy_RightEye)
         Mouth = findViewById(R.id.Eddy_mouth)
         btnSpeak = findViewById(R.id.btnSpeak)
-        tvUserInput = findViewById(R.id.tvUserInput)
-        tvBotResponse = findViewById(R.id.tvBotResponse)
+        thinking = findViewById(R.id.think)
         tvCaptions = findViewById(R.id.tvCaptions) // Make sure to add this TextView in your XML
+
+         Glide.with(this)
+            .asGif()
+            .load(R.drawable.thinking)
+            .into(thinking)
+
+
+         //
+
 
 
         btnSpeak.setOnClickListener { startSpeechToText() }
     }
+private fun isThinking(bool :Boolean){
 
+    if(bool) thinking.visibility = View.VISIBLE  else thinking.visibility = View.INVISIBLE
+}
     // Speech Input
     private fun startSpeechToText() {
+
         try {
             Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -112,6 +126,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 startActivityForResult(this, REQUEST_CODE_SPEECH_INPUT)
             }
         } catch (e: Exception) {
+            isThinking(false)
             showToast("Speech recognition not available: ${e.message}")
         }
     }
@@ -121,13 +136,15 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         if (requestCode == REQUEST_CODE_SPEECH_INPUT && resultCode == RESULT_OK) {
             data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let {
 
-                tvUserInput.text = "You said: $it"
+
                 if(it.contains("Eddie"))
                 {//so discard the speach before eddie
                     Log.d("eddie", "onActivityResult: eddie detected")
                     processUserInput(it)
                 }
                 else{
+                    var default = "make a snarky remark as we we not talking to you, if they want to talk to you they must call you by name, which is Eddie."
+                    processUserInput(default)
                     Log.d("eddie", "onActivityResult: eddie not detected")
                 }
 
@@ -138,6 +155,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     // API Communication
     private fun processUserInput(input: String) {
+        isThinking(true)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = apiService.getChatResponse(
@@ -154,13 +172,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     withContext(Dispatchers.Main) {
 
                        var mod_reply = reply.replace('*',' ')
-                        tvBotResponse.text = "Eddy: $mod_reply"
+                        isThinking(false)
                         speakWithCaptions(mod_reply)
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    tvBotResponse.text = "Error: ${e.localizedMessage}"
+                    isThinking(false)
                     Log.e("API", "Error in processUserInput", e)
                 }
             }
@@ -178,7 +196,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     // TTS Implementation with Captions
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts.language = Locale.getDefault()
+            tts.language = Locale.KOREAN
+            tts.setPitch(0.1f) // Lower values = deeper voice
+            tts.setSpeechRate(1.0f)
+
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {
                     runOnUiThread {
