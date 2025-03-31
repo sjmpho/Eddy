@@ -97,6 +97,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tvUserInput = findViewById(R.id.tvUserInput)
         tvBotResponse = findViewById(R.id.tvBotResponse)
         tvCaptions = findViewById(R.id.tvCaptions) // Make sure to add this TextView in your XML
+
+
         btnSpeak.setOnClickListener { startSpeechToText() }
     }
 
@@ -118,9 +120,18 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_SPEECH_INPUT && resultCode == RESULT_OK) {
             data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let {
-                tvUserInput.text = "You said: $it"
 
-                processUserInput(it)
+                tvUserInput.text = "You said: $it"
+                if(it.contains("Eddie"))
+                {//so discard the speach before eddie
+                    Log.d("eddie", "onActivityResult: eddie detected")
+                    processUserInput(it)
+                }
+                else{
+                    Log.d("eddie", "onActivityResult: eddie not detected")
+                }
+
+
             }
         }
     }
@@ -367,6 +378,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
         Mouth.layoutParams.height = 50
         Mouth.requestLayout()
+
     }
 
     // Helper functions
