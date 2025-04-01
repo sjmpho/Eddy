@@ -159,7 +159,7 @@ private fun isThinking(bool :Boolean){
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = apiService.getChatResponse(
-                    authToken = "Bearer ",
+                    authToken = "Bearer s",
                     request = DeepSeekRequest(
                         messages = listOf(
                             Message("system", getSystemPrompt()),
@@ -196,7 +196,7 @@ private fun isThinking(bool :Boolean){
     // TTS Implementation with Captions
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts.language = Locale.KOREAN
+            tts.language = Locale.ENGLISH
             tts.setPitch(0.1f) // Lower values = deeper voice
             tts.setSpeechRate(1.0f)
 
@@ -290,10 +290,16 @@ private fun isThinking(bool :Boolean){
                 winkLeftEye()
             }
 
-        }else{
+        }
+        val nod = Regex("(?i)(ok|yes|agree|sure)")
+        if(words.get(currentWordIndex).matches(nod))
+        {
+            Log.d("dude", "highlightWordsSequentially: its a nod")
+            NodHeadJob = CoroutineScope(Dispatchers.Main).launch {
+                NodHead()
+            }
 
         }
-
       //  Log.d("dude", "highlightWordsSequentially: ${words.get(currentWordIndex)}")
         val endPos = startPos + words[currentWordIndex].length
 
@@ -334,6 +340,7 @@ private fun isThinking(bool :Boolean){
     private var EyesAnimator: ValueAnimator? = null
     private var winkJob: Job? = null
     private var blinkJob: Job? = null
+    private var NodHeadJob :Job? = null
 
     private fun blinkOnce() {
         ValueAnimator.ofInt(30, 100).apply {
@@ -348,8 +355,22 @@ private fun isThinking(bool :Boolean){
             }
             start()
         }
-    }
 
+    }
+    private fun NodHead(){
+        ValueAnimator.ofInt(20,0 ).apply {
+            duration = 200
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener {
+                val transLation = it.animatedValue as Float
+                LeftEye.translationY = transLation
+
+                RightEye.requestLayout()
+            }
+            start()
+        }
+
+    }
     private fun winkLeftEye() {
         ValueAnimator.ofInt(30, 100).apply {
             duration = 200

@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
     <TextView
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/tvCaptions"
         android:elevation="80dp"
         android:layout_width="match_parent"
@@ -56,6 +56,8 @@
                 app:strokeColor="@color/white">
 
                 <RelativeLayout
+                    android:id="@+id/HeadMovement"
+                    android:translationY="0dp"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@color/white"
@@ -107,22 +109,43 @@
             <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"
                 android:layout_height="25dp"
+                android:id="@+id/topLine"
+                android:rotation="0"
                 app:dividerColor="@color/black"/>
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:gravity="center"
-                android:backgroundTint="@color/white"
-                android:background="@color/white"
-                android:orientation="horizontal"
-                android:layout_height="match_parent">
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="135dp"
 
-                     android:layout_height="match_parent"/>
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="135dp"
-                    android:layout_height="match_parent"/>
-            </LinearLayout>
+                android:layout_height="match_parent">
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="200dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="start"
+                    android:layout_marginStart="-40dp"
+                    android:layout_marginTop="28dp"
+                    android:rotation="38"
+                    app:dividerColor="@color/black"/>
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="200dp"
+                    android:layout_height="25dp"
+                    android:layout_marginTop="28dp"
+                    android:layout_gravity="end"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="-40dp"
+                    android:rotation="-38"
+                    app:dividerColor="@color/black"/>
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="30dp"
+                    app:dividerColor="@color/black"
+
+                    android:elevation="100dp"
+                    android:layout_marginTop="92dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_height="match_parent"
+                   />
+            </RelativeLayout>
+
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
