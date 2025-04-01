@@ -5,9 +5,21 @@
     android:id="@+id/main"
     android:background="@color/white"
     android:layout_width="match_parent"
+
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:id="@+id/powerBtn"
+
+
+        android:elevation="80dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#00FFFFFF"
+        android:src="@drawable/baseline_power_settings_new_24"
+        app:tint="#3FF43F" />
     <TextView
+        android:layout_toEndOf="@id/powerBtn"
         android:visibility="visible"
         android:id="@+id/tvCaptions"
         android:elevation="80dp"

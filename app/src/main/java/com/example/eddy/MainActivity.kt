@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -44,6 +45,7 @@ import android.speech.RecognitionListener
 import android.speech.SpeechRecognizer
 import android.view.View
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
@@ -53,13 +55,16 @@ import kotlin.math.log
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     // Views
+    private lateinit var Head : RelativeLayout
     private lateinit var LeftEye: MaterialCardView
     private lateinit var RightEye: MaterialCardView
     private lateinit var Mouth: MaterialCardView
     private lateinit var btnSpeak: Button
     private lateinit var thinking : ImageView
+    private lateinit var powerBtn : ImageView
     private lateinit var tvCaptions: TextView
     private  val WAKE_WORD = "activate"
+    private var isPowerOn = true
 
     // TTS
     private lateinit var tts: TextToSpeech
@@ -92,9 +97,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun initViews() {
+        powerBtn = findViewById(R.id.powerBtn)
         LeftEye = findViewById(R.id.Eddy_leftEye)
         RightEye = findViewById(R.id.Eddy_RightEye)
         Mouth = findViewById(R.id.Eddy_mouth)
+        Head = findViewById(R.id.HeadMovement)
         btnSpeak = findViewById(R.id.btnSpeak)
         thinking = findViewById(R.id.think)
         tvCaptions = findViewById(R.id.tvCaptions) // Make sure to add this TextView in your XML
@@ -108,8 +115,24 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
          //
 
 
+        powerBtn.setOnClickListener {
 
-        btnSpeak.setOnClickListener { startSpeechToText() }
+            if(isPowerOn) {
+                isPowerOn = false
+                powerBtn.imageTintList = ColorStateList.valueOf(Color.RED)
+            }else{
+                isPowerOn = true
+                powerBtn.imageTintList = ColorStateList.valueOf(Color.GREEN)
+            }
+        }
+        btnSpeak.setOnClickListener {
+            if(isPowerOn)
+            {
+                startSpeechToText()
+            }else{
+                Toast.makeText(application, "To talk , toggle power button", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 private fun isThinking(bool :Boolean){
 
@@ -159,7 +182,7 @@ private fun isThinking(bool :Boolean){
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = apiService.getChatResponse(
-                    authToken = "Bearer s",
+                    authToken = "Bearer ",
                     request = DeepSeekRequest(
                         messages = listOf(
                             Message("system", getSystemPrompt()),
@@ -250,7 +273,13 @@ private fun isThinking(bool :Boolean){
                     wordHighlighter.removeCallbacksAndMessages(null)
                     resetMouth()
                     resetCaptionStyle()
-                    startSpeechToText()
+                    if(isPowerOn)
+                    {
+                        startSpeechToText()
+                    }else{
+                        Toast.makeText(application, "To talk , toggle power button", Toast.LENGTH_SHORT).show()
+                    }
+
                 }
             }
 
@@ -260,7 +289,12 @@ private fun isThinking(bool :Boolean){
                     wordHighlighter.removeCallbacksAndMessages(null)
                     resetMouth()
                     resetCaptionStyle()
-                    startSpeechToText()
+                    if(isPowerOn)
+                    {
+                        startSpeechToText()
+                    }else{
+                        Toast.makeText(application, "To talk , toggle power button", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         })
@@ -358,14 +392,13 @@ private fun isThinking(bool :Boolean){
 
     }
     private fun NodHead(){
-        ValueAnimator.ofInt(20,0 ).apply {
-            duration = 200
+        ValueAnimator.ofFloat(30.0F,0.0F ).apply {
+            duration = 500
             interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener {
                 val transLation = it.animatedValue as Float
-                LeftEye.translationY = transLation
+                Head.translationY = transLation
 
-                RightEye.requestLayout()
             }
             start()
         }
