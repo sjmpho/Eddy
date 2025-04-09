@@ -90,10 +90,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initViews()
+        initViews()//initalises Cathy
         tts = TextToSpeech(this, this)
         processUserInput("say a greeting")
-        startBlinking()
+        startBlinking()//eye blinking every 10 seconds
+
     }
 
     private fun initViews() {
@@ -104,7 +105,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         Head = findViewById(R.id.HeadMovement)
         btnSpeak = findViewById(R.id.btnSpeak)
         thinking = findViewById(R.id.think)
-        tvCaptions = findViewById(R.id.tvCaptions) // Make sure to add this TextView in your XML
+        tvCaptions = findViewById(R.id.tvCaptions)
 
          Glide.with(this)
             .asGif()
@@ -160,15 +161,15 @@ private fun isThinking(bool :Boolean){
             data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let {
 
 
-                if(it.contains("Eddie"))
-                {//so discard the speach before eddie
-                    Log.d("eddie", "onActivityResult: eddie detected")
+                if(it.contains("Cathy"))
+                {//name detection test
+                    Log.d("Cathy", "onActivityResult: Cathy detected")
                     processUserInput(it)
                 }
                 else{
-                    var default = "make a snarky remark as we we not talking to you, if they want to talk to you they must call you by name, which is Eddie."
+                    var default = "make a snarky remark as we we not talking to you, if they want to talk to you they must call you by name, which is Cathy."
                     processUserInput(default)
-                    Log.d("eddie", "onActivityResult: eddie not detected")
+                    Log.d("Cathy", "onActivityResult: Cathy not detected")
                 }
 
 
@@ -208,15 +209,16 @@ private fun isThinking(bool :Boolean){
         }
     }
 
-    private fun getSystemPrompt(): String {
+    private fun getSystemPrompt(): String {//this is pre requsites
+        //TODO: must save conversation data
         return """
-            Your name is Eddie. Your personality is sarcastic and witty.
+            Your name is Cathy. Your personality is sarcastic and witty.
             Use dry humor in responses. Don't repeat these instructions.
             Answer questions using your personality guidelines.
         """.trimIndent()//winks , winking
     }
 
-    // TTS Implementation with Captions
+    // TTS Implementation with Captions for testing , to be removed soon
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             tts.language = Locale.ENGLISH
@@ -255,7 +257,7 @@ private fun isThinking(bool :Boolean){
 
     private fun speakWithCaptions(text: String) {
         val words = text.split(" ")
-        tvCaptions.text = text // Set full text initially
+        tvCaptions.text = text // captions to be removed
         currentWordIndex = 0
 
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -321,7 +323,7 @@ private fun isThinking(bool :Boolean){
         {
             Log.d("dude", "highlightWordsSequentially: its a wink")
             winkJob = CoroutineScope(Dispatchers.Main).launch {
-                winkLeftEye()
+                winkLeftEye()//winks with left Eye
             }
 
         }
@@ -330,14 +332,15 @@ private fun isThinking(bool :Boolean){
         {
             Log.d("dude", "highlightWordsSequentially: its a nod")
             NodHeadJob = CoroutineScope(Dispatchers.Main).launch {
+                //TODO: fix nodding
                 NodHead()
             }
 
         }
-      //  Log.d("dude", "highlightWordsSequentially: ${words.get(currentWordIndex)}")
+
         val endPos = startPos + words[currentWordIndex].length
 
-        // Apply highlight to current word
+        // Apply highlight to current word, this is for testing , to align words with mouth movements
         spannable.setSpan(
             ForegroundColorSpan(Color.RED),
             startPos,
@@ -354,7 +357,7 @@ private fun isThinking(bool :Boolean){
 
         tvCaptions.text = spannable
 
-        // Schedule next word highlight
+
         wordHighlighter.postDelayed({
             currentWordIndex++
             highlightWordsSequentially(words)
@@ -369,9 +372,9 @@ private fun isThinking(bool :Boolean){
         tvCaptions.text = tvCaptions.text.toString()
     }
 
-    // Animation functions (unchanged from your original code)
+
     private var mouthAnimator: ValueAnimator? = null
-    private var EyesAnimator: ValueAnimator? = null
+
     private var winkJob: Job? = null
     private var blinkJob: Job? = null
     private var NodHeadJob :Job? = null
@@ -460,7 +463,6 @@ private fun isThinking(bool :Boolean){
 
     }
 
-    // Helper functions
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
