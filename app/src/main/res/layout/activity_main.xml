@@ -20,7 +20,7 @@
         app:tint="#3FF43F" />
     <TextView
         android:layout_toEndOf="@id/powerBtn"
-        android:visibility="visible"
+        android:visibility="gone"
         android:id="@+id/tvCaptions"
         android:elevation="80dp"
         android:layout_width="match_parent"
@@ -38,6 +38,16 @@
        android:layout_width="50dp"
        android:layout_height="50dp"
        android:id="@+id/think"/>
+
+    <ImageView
+        android:layout_marginEnd="85dp"
+        android:rotation="15"
+        android:layout_marginTop="40dp"
+        android:layout_alignParentEnd="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/bow"
+        android:elevation="90dp"/>
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         app:strokeWidth="30dp"
@@ -166,6 +176,7 @@
 
 
     <Button
+        android:visibility="gone"
         android:layout_centerInParent="true"
         android:layout_alignParentBottom="true"
         android:id="@+id/btnSpeak"
