@@ -6,7 +6,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 interface DeepSeekApiService {
-    @POST("v1/chat/completions") // Check DeepSeek's actual endpoint
+    @POST("v1/chat/completions")
     suspend fun getChatResponse(
         @Header("Authorization") authToken: String,
         @Body request: DeepSeekRequest
@@ -14,7 +14,7 @@ interface DeepSeekApiService {
 }
 
 data class DeepSeekRequest(
-    val model: String = "deepseek-chat", // Check latest model name
+    val model: String = "deepseek-chat",
     val messages: List<Message>,
     val temperature: Double = 0.7,
     val max_tokens: Int = 150

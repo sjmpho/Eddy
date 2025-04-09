@@ -146,7 +146,7 @@ private fun isThinking(bool :Boolean){
             Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to Cathy...")
                 startActivityForResult(this, REQUEST_CODE_SPEECH_INPUT)
             }
         } catch (e: Exception) {
@@ -161,7 +161,7 @@ private fun isThinking(bool :Boolean){
             data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let {
 
 
-                if(it.contains("Cathy"))
+                if(it.contains("Cathy") ||it.contains("Kathy"))
                 {//name detection test
                     Log.d("Cathy", "onActivityResult: Cathy detected")
                     processUserInput(it)
@@ -183,7 +183,7 @@ private fun isThinking(bool :Boolean){
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = apiService.getChatResponse(
-                    authToken = "Bearer ",
+                    authToken = "Bearer sk-78f4384683604045b1b5925c52a99988",
                     request = DeepSeekRequest(
                         messages = listOf(
                             Message("system", getSystemPrompt()),
