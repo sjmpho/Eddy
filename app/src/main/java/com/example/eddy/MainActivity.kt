@@ -183,7 +183,7 @@ private fun isThinking(bool :Boolean){
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = apiService.getChatResponse(
-                    authToken = "Bearer sk-78f4384683604045b1b5925c52a99988",
+                    authToken = "Bearer ",
                     request = DeepSeekRequest(
                         messages = listOf(
                             Message("system", getSystemPrompt()),
